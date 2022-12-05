@@ -13,3 +13,7 @@ Aim of the monitoring is hit detection. Chosen method is tracking the ball with 
 
 - There must be shape-based filtering so that camera can track the ball's position
     - This unit must be able to detect the location of the ball and its distance to the camera. To do that, it must have some references such as table size, ball size, etc.
+
+
+## Reference
+https://pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/
