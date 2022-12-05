@@ -1,6 +1,6 @@
 # CAMERA MONITORING UNIT
 
-Aim of the monitoring is hit detection. 
+Aim of the monitoring is hit detection. Chosen method is tracking the ball with computer vision and observing the change in the position of the ball within specific frame-time range.
 
 # DONE
 
