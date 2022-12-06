@@ -4,7 +4,9 @@ import numpy as np
 import argparse
 import cv2
 import imutils
+import shutil
 import time
+import os
 
 # construction of the argument parsing and parse the arguments
 ap = argparse.ArgumentParser()
@@ -12,11 +14,21 @@ ap.add_argument("--v", "--video", help="path")
 ap.add_argument("-b", "--buffer", type=int, default=64, help="max buffer size")
 args = vars(ap.parse_args())
 
+startTime = 0
+
+count = 0
+
+cwd = os.getcwd()
+shutil.rmtree(cwd+"/test-images",)
+time.sleep(1.0)
+os.mkdir(cwd+"/test-images")
+
+
 #define the lower and upper boundaires of the "green"
 # ball in the HSV color space, then initialize the list of tracked points
 
-greenLower = (140, 0, 0)
-greenUpper = (210, 255, 255)
+greenLower = (135, 0, 100)
+greenUpper = (165, 100, 255)
 pts = deque(maxlen=args["buffer"])
 
 # if a video path was not supplied, grap the reference
@@ -34,9 +46,12 @@ time.sleep(2.0)
 # keep looping
 while True:
     # grab the current frame
+    if startTime == 0:
+        startTime = time.time()
     frame = vs.read()
     # handle the frame from VideoCapture or VideoStream
     frame = frame[1] if args.get("video", False) else frame
+    
 
     # if we are viewing a video and we did not grab a frame, then we have reached the end of the video
     if frame is None:
@@ -44,21 +59,28 @@ while True:
    
     # resize the rame, blur it, and convert it to the HSV color space
     frame = imutils.resize(frame, width=600)
-    blurred = cv2.GaussianBlur(frame, (7,7), 0)
+    blurred = cv2.GaussianBlur(frame, (5,5), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV_FULL)
     
     # construct a mask for the color "green", then perform a series of dilations and erosions to remove any small blobs left in the mask
     mask = cv2.inRange(hsv, greenLower, greenUpper)
-    mask = cv2.erode(mask, None, iterations=2)
-    mask = cv2.dilate(mask, None, iterations=2)
+    # mask = cv2.erode(mask, None, iterations=2)
+    # mask = cv2.dilate(mask, None, iterations=2)
+
+    filtered = cv2.erode(hsv, None, iterations=2)
+    filtered = cv2.dilate(hsv, None, iterations=2)
 
     # find contours in the mask and initialize the current (x, y) center of the ball
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     center = None
+    count += 1
+
+    fileName = cwd + "/test-images/image{}.jpeg".format(count)
+    cv2.imwrite(fileName, hsv)
 
     cv2.imshow("Hsv", hsv)
-    cv2.imshow("Blur", blurred)
+    cv2.imshow("Filtered", filtered)
     cv2.imshow("Mask", mask)
     # only proceed if at least one contour was found
     if len(cnts) > 0:
@@ -66,7 +88,8 @@ while True:
         c = max(cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
-        center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+        if M["m00"] != 0:
+            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # only proceed if the radius meets a minimum size
         if radius > 10:
@@ -103,6 +126,9 @@ if not args.get("video", False):
 # otherwise, release the camera
 else:
     vs.release()
+
+print(time.time()-startTime)
+
 
 # close all windows
 cv2.destroyAllWindows()
