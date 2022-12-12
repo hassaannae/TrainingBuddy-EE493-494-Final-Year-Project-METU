@@ -30,10 +30,10 @@
 /**        
  * Connection
  * Arduino    VoiceRecognitionModule
- * 2   ------->     TX
+ * 50   ------->     TX
  * 3   ------->     RX
  */
-VR myVR(10,11);    // 10:RX 11:TX for Arduino MEGA.
+VR myVR(50,3);    // 3:RX 50:TX for Arduino MEGA.
 
 /***************************************************************************/
 /** declare print functions */
