@@ -56,12 +56,12 @@ void NoSpin(int speed) {
   // Left C
   digitalWrite(pLeft, HIGH);
   digitalWrite(nLeft, LOW);
-  analogWrite(enLeft, speed);
+  analogWrite(enLeft, 255);
 
   // Right CW
   digitalWrite(pRight, LOW);
   digitalWrite(nRight, HIGH);
-  analogWrite(enRight, speed);
+  analogWrite(enRight, 255);
 }
 
 void Topspin(int speed) {
@@ -79,12 +79,12 @@ void Topspin(int speed) {
   // Left C
   digitalWrite(pLeft, HIGH);
   digitalWrite(nLeft, LOW);
-  analogWrite(enLeft, speed);
+  analogWrite(enLeft, 255);
 
   // Right CW
   digitalWrite(pRight, LOW);
   digitalWrite(nRight, HIGH);
-  analogWrite(enRight, speed);
+  analogWrite(enRight, 255);
 }
 
 void Backspin(int speed) {
@@ -102,12 +102,12 @@ void Backspin(int speed) {
   // Left CW
   digitalWrite(pLeft, HIGH);
   digitalWrite(nLeft, LOW);
-  analogWrite(enLeft, speed);
+  analogWrite(enLeft, 255);
 
   // Right CW
   digitalWrite(pRight, LOW);
   digitalWrite(nRight, HIGH);
-  analogWrite(enRight, speed);
+  analogWrite(enRight, 255);
 }
 
 void loop() {
