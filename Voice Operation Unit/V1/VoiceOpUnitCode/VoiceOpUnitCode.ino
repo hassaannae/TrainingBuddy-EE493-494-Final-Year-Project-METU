@@ -7,44 +7,30 @@
    2   ------->     TX
    3   ------->     RX
 */
-VR myVR(2,3);    // 2:RX 3:TX, you can choose your favourite pins.
+VR myVR(50,3);    // 3:RX 50:TX, you can choose your favourite pins.
 
 uint8_t records[7]; // save record
 uint8_t buf[64];
 
 
 // led pins
-int  hey_buddy = 22; // stored on position 0
-int  power_on = 23; // stored on position 1
-int  power_off = 24; // stored on position 2
-int  set_speed = 25; // stored on position 3
-int  set_frequency= 26; // stored on position 4
-int  slow = 27; // stored on position 5
-int  moderate = 28; // stored on position 6
-int  fast = 29; // stored on position 7
-int  set_angle = 30; // stored on position 8
-int  left = 31; // stored on position 9
-int  mid = 32; // stored on position 10
-int  right = 33; // stored on position 11
-int  change_spin = 35; // stored on position 12
-int  no_spin = 36; // stored on position 13
-int  topspin = 37; // stored on position 14
-int  backspin = 38; // stored on position 15
-int  heavy = 39; // stored on position 16
-int  light = 40; // stored on position 17
-//int  = 41;
-//int  = 42;
-//int  = 43;
-//int  = 44;
-//int  = 45;
-//int  = 46;
-//int  = 47;
-//int  = 48;
-//int  = 49;
+int  buddy = 22; // stored on position 0 / 15
+int  set_speed = 23; // stored on position 1 / 16
+int  slow = 24; // stored on position 2 / 17
+int  moderate = 25; // stored on position 3 /18
+int  fast = 26; // stored on position 4 /19
+int  set_angle = 27; // stored on position 5 /20
+int  left = 28; // stored on position 6 /21
+int  mid = 29; // stored on position 7 /22
+int  right = 30; // stored on position 8 /23
+int  change_spin = 31; // stored on position 9 /24
+int  topspin = 32; // stored on position 10 /25
+int  backspin = 33; // stored on position 11 /26
+int  test = 34; // stored on position 30 /27
 
 
 // Flags
-bool HEY_BUDDY = false; // wake word
+bool buddy = false; // wake word
 
 
 #define onRecord    (0)
@@ -120,11 +106,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Voice Control Unit for Training Buddy");
   
-  pinMode(hey_buddy, OUTPUT);
-  pinMode(power_on, OUTPUT);
-  pinMode(power_off, OUTPUT);
+  pinMode(buddy, OUTPUT);
   pinMode(set_speed, OUTPUT);
-  pinMode(set_frequency, OUTPUT);
   pinMode(slow, OUTPUT);
   pinMode(moderate, OUTPUT);
   pinMode(fast, OUTPUT);
@@ -133,11 +116,9 @@ void setup()
   pinMode(mid, OUTPUT);
   pinMode(right, OUTPUT);
   pinMode(change_spin, OUTPUT);
-  pinMode(no_spin, OUTPUT);
   pinMode(topspin, OUTPUT);
   pinMode(backspin, OUTPUT);
-  pinMode(heavy, OUTPUT);
-  pinMode(light, OUTPUT);
+  pinMode(test, OUTPUT);
     
   if(myVR.clear() == 0){
     Serial.println("Recognizer cleared.");
@@ -148,6 +129,9 @@ void setup()
   }
   
   myVR.load(uint8_t(0)); // Hey Buddy is stored on position 0
+  myVR.load(uint8_t(15)); // Hey Buddy is stored on position 15
+  myVR.load(uint8_t(30)); // test is stored on position 30
+  myVR.load(uint8_t(27)); // test is stored on position 27
 }
 
 void loop()
@@ -155,148 +139,140 @@ void loop()
   int ret;
   ret = myVR.recognize(buf, 50);
   if(ret>0){
-    if (buf[1] == 0) {
-      digitalWrite(hey_buddy, HIGH);
-      HEY_BUDDY = true;
+    if (buf[1] == 0 || buf[1] == 15) {
+      digitalWrite(buddy, HIGH);
+      buddy = true;
       Serial.println("Hey Buddy");
       myVR.clear();
-      myVR.load(uint8_t (3)); // set_speed
-      myVR.load(uint8_t (4)); // set_frequency
-      myVR.load(uint8_t (8)); // set_angle
-      myVR.load(uint8_t (12)); // change_spin
+      myVR.load(uint8_t (1)); // set_speed
+      myVR.load(uint8_t (16)); // set_speed
+      myVR.load(uint8_t (5)); // set_angle
+      myVR.load(uint8_t (20)); // set_angle
+      myVR.load(uint8_t (9)); // change_spin
+      myVR.load(uint8_t (24)); // change_spin
+    }
+    if (buf[1] == 30 || buf[1] == 27) {
+      digitalWrite(test, HIGH);
+      myVR.clear();
+      myVR.load(uint8_t (0)); // buddy
+      myVR.load(uint8_t (15)); // buddy
+      myVR.load(uint8_t (30)); // test
+      myVR.load(uint8_t (27)); // test
+      delay(1000);
+      digitalWrite(test, LOW);
     }
 
-    if(HEY_BUDDY) {
-      if(buf[1] == 3){
+    if(buddy) {
+      if(buf[1] == 1 || buf[1] == 16){
         digitalWrite(set_speed, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (5)); // slow
-        myVR.load(uint8_t (6)); // medium
-        myVR.load(uint8_t (7)); // fast
+        myVR.load(uint8_t (2)); // slow
+        myVR.load(uint8_t (17)); // slow
+        myVR.load(uint8_t (3)); // medium
+        myVR.load(uint8_t (18)); // medium
+        myVR.load(uint8_t (4)); // fast
+        myVR.load(uint8_t (19)); // fast
       }
-      if(buf[1] == 4){
-        digitalWrite(set_frequency, HIGH);
-        myVR.clear();
-        myVR.load(uint8_t (5)); // slow
-        myVR.load(uint8_t (6)); // medium
-        myVR.load(uint8_t (7)); // fast
-      }
-      if(buf[1] == 5){
+      if(buf[1] == 2 || buf[1] == 17){
         digitalWrite(slow, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
         digitalWrite(slow, LOW);
         digitalWrite(set_speed, LOW);
-        digitalWrite(set_frequency, LOW);
-        digitalWrite(hey_buddy, LOW);
+        digitalWrite(buddy, LOW);
       }
-      if(buf[1] == 6){
+      if(buf[1] == 3 || buf[1] == 18){
         digitalWrite(moderate, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
         digitalWrite(moderate, LOW);
         digitalWrite(set_speed, LOW);
-        digitalWrite(set_frequency, LOW);
-        digitalWrite(hey_buddy, LOW);
+        digitalWrite(buddy, LOW);
       }
-      if(buf[1] == 7){
+      if(buf[1] == 4 || buf[1] == 19){
         digitalWrite(fast, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
         digitalWrite(fast, LOW);
-        digitalWrite(set_speed, LOW);
-        digitalWrite(set_frequency, LOW);  
-        digitalWrite(hey_buddy, LOW);      
+        digitalWrite(set_speed, LOW); 
+        digitalWrite(buddy, LOW);      
       }      
       
-      if(buf[1] == 8){
+      if(buf[1] == 5 || buf[1] == 20){
         digitalWrite(set_angle, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (9)); // slow
-        myVR.load(uint8_t (10)); // medium
-        myVR.load(uint8_t (11)); // fast
+        myVR.load(uint8_t (6)); // left
+        myVR.load(uint8_t (21)); // left
+        myVR.load(uint8_t (7)); // mid
+        myVR.load(uint8_t (22)); // mid
+        myVR.load(uint8_t (8)); // right
+        myVR.load(uint8_t (23)); // right
       }
-      if(buf[1] == 9){
+      if(buf[1] == 6 || buf[1] == 21){
         digitalWrite(left, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
         digitalWrite(left, LOW);
         digitalWrite(set_angle, LOW);  
-        digitalWrite(hey_buddy, LOW);      
+        digitalWrite(buddy, LOW);      
       } 
-      if(buf[1] == 10){
+      if(buf[1] == 7 || buf[1] == 22){
         digitalWrite(mid, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
         digitalWrite(mid, LOW);
         digitalWrite(set_angle, LOW); 
-        digitalWrite(hey_buddy, LOW);      
+        digitalWrite(buddy, LOW);      
       }
-      if(buf[1] == 11){
+      if(buf[1] == 8 || buf[1] == 23){
         digitalWrite(right, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
         digitalWrite(right, LOW);
         digitalWrite(set_angle, LOW);  
-        digitalWrite(hey_buddy, LOW);      
+        digitalWrite(buddy, LOW);      
       }
 
-      if(buf[1] == 12){
+      if(buf[1] == 9 || buf[1] == 24){
         digitalWrite(change_spin, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (13)); // no spin
-        myVR.load(uint8_t (14)); // Topspin
-        myVR.load(uint8_t (15)); // Backspin
+        myVR.load(uint8_t (10)); // Topspin
+        myVR.load(uint8_t (25)); // Topspin
+        myVR.load(uint8_t (11)); // Backspin
+        myVR.load(uint8_t (26)); // Backspin
       }
-      if(buf[1] == 13){
-        digitalWrite(no_spin, HIGH);
-        myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
-        delay(3000);
-        digitalWrite(no_spin, LOW);
-        digitalWrite(change_spin, LOW);  
-        digitalWrite(hey_buddy, LOW);
-      }
-      if(buf[1] == 14){
+      if(buf[1] == 10 || buf[1] == 25){
         digitalWrite(topspin, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (16)); // heavy
-        myVR.load(uint8_t (17)); // light
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
+        delay(3000);
+        digitalWrite(topspin, LOW);
+        digitalWrite(change_spin, LOW);
+        digitalWrite(buddy, LOW);
       }
-      if(buf[1] == 15){
+      if(buf[1] == 11 || buf[1] == 26){
         digitalWrite(backspin, HIGH);
         myVR.clear();
-        myVR.load(uint8_t (16)); // heavy
-        myVR.load(uint8_t (17)); // light
-      }
-      if(buf[1] == 16){
-        digitalWrite(heavy, HIGH);
-        myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
+        myVR.load(uint8_t (0)); // buddy
+        myVR.load(uint8_t (15)); // buddy
         delay(3000);
-        digitalWrite(heavy, LOW);
-        digitalWrite(topspin, LOW);
         digitalWrite(backspin, LOW);
         digitalWrite(change_spin, LOW);
-        digitalWrite(hey_buddy, LOW);
-      }
-      if(buf[1] == 17){
-        digitalWrite(light, HIGH);
-        myVR.clear();
-        myVR.load(uint8_t (0)); // hey_buddy
-        delay(3000);
-        digitalWrite(light, LOW);
-        digitalWrite(topspin, LOW);
-        digitalWrite(backspin, LOW);
-        digitalWrite(change_spin, LOW);
-        digitalWrite(hey_buddy, LOW);
-      }        
+        digitalWrite(buddy, LOW);
+      }       
     }
     
     /** voice recognized */
