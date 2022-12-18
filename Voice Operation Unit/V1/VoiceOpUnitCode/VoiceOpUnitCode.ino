@@ -30,7 +30,7 @@ int  test = 34; // stored on position 30 /27
 
 
 // Flags
-bool buddy = false; // wake word
+bool BUDDY = false; // wake word
 
 
 #define onRecord    (0)
@@ -141,7 +141,7 @@ void loop()
   if(ret>0){
     if (buf[1] == 0 || buf[1] == 15) {
       digitalWrite(buddy, HIGH);
-      buddy = true;
+      BUDDY = true;
       Serial.println("Hey Buddy");
       myVR.clear();
       myVR.load(uint8_t (1)); // set_speed
@@ -162,7 +162,7 @@ void loop()
       digitalWrite(test, LOW);
     }
 
-    if(buddy) {
+    if(BUDDY) {
       if(buf[1] == 1 || buf[1] == 16){
         digitalWrite(set_speed, HIGH);
         myVR.clear();

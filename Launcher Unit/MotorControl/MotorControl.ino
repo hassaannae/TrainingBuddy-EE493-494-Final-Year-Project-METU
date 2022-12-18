@@ -1,23 +1,14 @@
 // pin Numbers (connect en- to PWM pins, others to any Digitals pins)
 // Motor Top
-int enTop = ;
-int pTop = ;
-int nTop = ;
+int enTop = 9;
+int pTop = 8;
+int nTop = 7;
 
 // Motor Bottom
-int enBottom = ;
-int pBottom = ;
-int nBottom = ;
+int enBottom = 5;
+int pBottom = 4;
+int nBottom = 3;
 
-// Motor Left
-int enLeft = ;
-int pLeft = ;
-int nLeft = ;
-
-// Motor Right
-int enRight = ;
-int pRight = ;
-int nRight = ;
 
 // fast medium slow definitions
 int fast = 240;
@@ -32,12 +23,6 @@ void setup() {
   pinMode(enBottom, OUTPUT);
   pinMode(pBottom, OUTPUT);
   pinMode(nBottom, OUTPUT);
-  pinMode(enLeft, OUTPUT);
-  pinMode(pLeft, OUTPUT);
-  pinMode(nLeft, OUTPUT);
-  pinMode(enRight, OUTPUT);
-  pinMode(pRight, OUTPUT);
-  pinMode(nRight, OUTPUT);
 
 }
 
@@ -52,16 +37,6 @@ void NoSpin(int speed) {
   digitalWrite(pBottom, HIGH);
   digitalWrite(nBottom, LOW);
   analogWrite(enBottom, speed);
-
-  // Left C
-  digitalWrite(pLeft, HIGH);
-  digitalWrite(nLeft, LOW);
-  analogWrite(enLeft, 255);
-
-  // Right CW
-  digitalWrite(pRight, LOW);
-  digitalWrite(nRight, HIGH);
-  analogWrite(enRight, 255);
 }
 
 void Topspin(int speed) {
@@ -75,16 +50,6 @@ void Topspin(int speed) {
   digitalWrite(pBottom, LOW);
   digitalWrite(nBottom, HIGH);
   analogWrite(enBottom, speed);
-
-  // Left C
-  digitalWrite(pLeft, HIGH);
-  digitalWrite(nLeft, LOW);
-  analogWrite(enLeft, 255);
-
-  // Right CW
-  digitalWrite(pRight, LOW);
-  digitalWrite(nRight, HIGH);
-  analogWrite(enRight, 255);
 }
 
 void Backspin(int speed) {
@@ -99,15 +64,6 @@ void Backspin(int speed) {
   digitalWrite(nBottom, LOW);
   analogWrite(enBottom, speed);
 
-  // Left CW
-  digitalWrite(pLeft, HIGH);
-  digitalWrite(nLeft, LOW);
-  analogWrite(enLeft, 255);
-
-  // Right CW
-  digitalWrite(pRight, LOW);
-  digitalWrite(nRight, HIGH);
-  analogWrite(enRight, 255);
 }
 
 void loop() {
