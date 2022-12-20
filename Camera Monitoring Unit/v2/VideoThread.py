@@ -39,8 +39,8 @@ class VideoThread(QThread):
             self.vs = cv2.VideoCapture(1)
         else:    
             self.vs = cv2.VideoCapture(file)
+            self.vs.set(cv2.CAP_PROP_FPS, frameRate)
         time.sleep(2.0)
-        self.frameRate = frameRate
         self.imageProcessor = imageProcessor
         self.roi = Roi(0,0,0,0)
         self.currentFrame = None
@@ -48,36 +48,34 @@ class VideoThread(QThread):
     def run(self):        
         reloadingVideo = False
         prev = 0
+    
         while self.running:
-            time_elapsed = time.time() - prev
             ret, frame  = self.vs.read()
 
-            if time_elapsed > 1./self.frameRate:
-                prev = time.time()
-
-                if frame is None:
-                    if reloadingVideo:
-                        break
-                    else:
-                        self.vs = cv2.VideoCapture(self.file)
-                        reloadingVideo = True
-                        continue
+            if frame is None:
+                if reloadingVideo:
+                    break
                 else:
-                    if reloadingVideo:
-                        reloadingVideo = False
+                    self.vs = cv2.VideoCapture(self.file)
+                    reloadingVideo = True
+                    continue
+            else:
+                if reloadingVideo:
+                    reloadingVideo = False
 
-                    self.currentFrame = frame.copy()
-                    self.processFrame(frame)
+                self.currentFrame = frame.copy()
+                self.processFrame(frame)
 
-                if self.playOneFrame:
-                    self.playOneFrame = False
-                    self.playing = False
+            if self.playOneFrame:
+                self.playOneFrame = False
+                self.playing = False
 
-                while not self.playing:
-                    time.sleep(0.5)
-                time.sleep(0.03)
-                # latestTrack = self.history[-1]
-                # writeServo(latestTrack["center"][0])
+            while not self.playing:
+                time.sleep(0.5)
+                #time.sleep(0.01667)
+            
+            # latestTrack = self.history[-1]
+            # writeServo(latestTrack["center"][0])
 
     def stop(self):
         self.running = False
@@ -105,7 +103,6 @@ class VideoThread(QThread):
             return None
 
         height, width, channels = frame.shape
-        
 
         t, l, b, r = self.roi.getAbsoluteValue(width, height)
         cropFrame = frame[t:b, l:r]
@@ -156,12 +153,12 @@ class VideoThread(QThread):
 
     def setRoi(self, top=None, left=None, bottom=None, right=None):
         if top is not None:
-            self.roi.top = top
+            self.roi.top = 5
         if left is not None:
-            self.roi.left = left
+            self.roi.left = 16
         if bottom is not None:
-            self.roi.bottom = bottom
+            self.roi.bottom = 10
         if right is not None:
-            self.roi.right = right
+            self.roi.right = 14
 
         self.reprocessFrame()

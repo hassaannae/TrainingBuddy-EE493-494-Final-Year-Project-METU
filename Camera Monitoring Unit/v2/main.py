@@ -25,15 +25,16 @@ ap.add_argument("--fps", help= "frame rate")
 args = vars(ap.parse_args())
 
 
+
 class App(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Pingpong ball detection")
-        self.setFixedSize(1600, 900)
+        self.setFixedSize(1440, 810)
 
         self.image_label = QLabel(self)
-        self.imageProcessor = BallTracker()
-        self.videoThread = VideoThread(self.imageProcessor, float(args["fps"]), file = "Video/test.mp4")
+        self.imageProcessor = BallTracker(float(args["fps"]))
+        self.videoThread = VideoThread(self.imageProcessor, float(args["fps"]), file = "Video/test2.mp4")
         self.videoThread.change_pixmap_signal.connect(self.update_image)
         self.videoThread.start()
 
@@ -69,9 +70,16 @@ class App(QWidget):
         resultLayout.addWidget(QLabel("Radius - Pos"))
         self.radiusAndPos = QLabel("-")
         self.radiusAndPos.setAlignment(Qt.AlignCenter)
-        self.radiusAndPos.setStyleSheet("font-weight: bold, font-size: 16px")
+        self.radiusAndPos.setStyleSheet("font-weight: bold, font-size: 20px")
         self.radiusAndPos.setFixedHeight(60)
         resultLayout.addWidget(self.radiusAndPos)
+
+        resultLayout.addWidget(QLabel("Dummies"))
+        self.dummy = QLabel("-")
+        self.dummy.setAlignment(Qt.AlignCenter)
+        self.dummy.setStyleSheet("font-weight: bold, font-size: 20px")
+        self.dummy.setFixedHeight(60)
+        resultLayout.addWidget(self.dummy)
 
         # CONTROL PANEL
         controlPanelLayout = QVBoxLayout()
@@ -124,6 +132,11 @@ class App(QWidget):
         s = self.imageProcessor.tracks.getLastTrack().getRadius()
         self.radiusAndPos.setText("Radius: {} - Pos: {}".format(s, q))
 
+    def updateDummy(self):
+        if self.imageProcessor.tracks.getLastTrack() == None:
+            return None
+        self.dummy.setText("Speed: {}".format(str(self.imageProcessor.tracks.calculateCurrentSpeed())))
+
     def convert_cv_qt(self, cv_img):
         """Convert from an opencv image to QPixmap"""
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
@@ -144,7 +157,11 @@ class App(QWidget):
         self.updateBallState()
         self.updateFrameToHit()
         self.updateRadiusAndPos()
-    
+        self.updateDummy()
+        
+        """self.imageProcessor.polyCoeff()"""
+        
+
 if __name__=="__main__":
     app = QApplication(sys.argv)
     a = App()

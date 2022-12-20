@@ -1,9 +1,13 @@
 from abc import abstractmethod
+from sklearn import linear_model
 import numpy as np
 import cv2
 import imutils
-
+import time
+import matplotlib.pyplot as plt
 from track import Track, Tracks
+from kalmanFilter import KalmanFilter
+
 
 class ImageProcessor():
     @abstractmethod
@@ -11,7 +15,7 @@ class ImageProcessor():
         pass
 
 class ColorThreshold():
-    def __init__(self, h_min=18, h_max=65, s_min=0, s_max=255, v_min=231, v_max=255):
+    def __init__(self, h_min=0, h_max=179, s_min=0, s_max=52, v_min=163, v_max=255):
         self.h_min = h_min
         self.h_max = h_max
         self.s_min = s_min
@@ -42,7 +46,7 @@ class GameParameter():
         return yOpponent, yRobot
 
 class BallTracker(ImageProcessor):
-    def __init__(self):
+    def __init__(self, frameRate):
         self.roi = [0,0,1,1]
         self.colorThreshold = ColorThreshold()
         self.gameParameter = GameParameter()
@@ -50,8 +54,14 @@ class BallTracker(ImageProcessor):
         self.transformationMatrix = None
         self.width = 10
         self.height = 10
-
+        self.frameCount = 0
+        self.frameRate = frameRate
+        self.kf = KalmanFilter()
+        """self.testArr = np.random.randint(64, size=(4,3))"""
+        self.predictPoly = np.ones((4, 3), dtype=float)
+        
     def calculate(self, frame):
+        
         self.height, self.width, c  = frame.shape
         if self.transformationMatrix is None:
             self.updatePerspectiveCorrection()
@@ -59,6 +69,16 @@ class BallTracker(ImageProcessor):
         blurred = cv2.GaussianBlur(frame, (13, 13), 0)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.colorThreshold.getMinValue(), self.colorThreshold.getMaxValue())
+
+        self.frameCount = self.frameCount + 1
+        print(self.frameCount)
+        if self.frameCount == 1:
+            self.firstMask = mask
+            time.sleep(0.2)
+            
+        elif self.frameCount > 2:
+            mask = cv2.subtract(mask, self.firstMask)
+        
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
@@ -78,10 +98,13 @@ class BallTracker(ImageProcessor):
             cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             thisTrack = Track( [x,y], radius, 0, 0 )
+            self.posX = x
+            self.posY = y
             self.tracks.append(thisTrack)
             self.drawSpeedVector(frame)
             self.drawHitLine(frame)
 
+        self.predict(frame)
         mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
 
         return True, frame, mask
@@ -127,3 +150,46 @@ class BallTracker(ImageProcessor):
             self.colorThreshold.v_min = v_min
         if v_max is not None:
             self.colorThreshold.v_max = v_max
+
+    def predict(self, frame):
+        if self.tracks.getTrackAt(-1) != None and self.frameCount >=68 and self.frameCount <=80:
+            #self.recordFrames(self.frameCount-71)
+            print(self.frameCount)
+            print("X: {}, Y: {}".format(self.posX, self.posY))
+            """print(str(self.testArr[1][2]) + " " + str(self.testArr[3][2]) + " " + str(self.testArr[0][1]))
+            print(self.testArr)"""
+            predicted = self.kf.predict(self.posX, self.posY)
+            cv2.circle(frame, (predicted[0], predicted[1]), 20, (255,0,0), 4)
+            print(predicted)
+  
+        
+        
+    """def recordFrames(self, ind):
+        self.predictPoly[ind-1][2] = self.posY
+        self.predictPoly[ind-1][1] = self.posX
+        self.predictPoly[ind-1][0] = ind
+        #print(self.predictPoly[:, 1])
+    def polyCoeff(self):
+        self.predictX = np.polyfit(self.predictPoly[:, 0], self.predictPoly[:, 1], deg=1)
+        self.predictY = np.polyfit(self.predictPoly[:, 0], self.predictPoly[:, 2], deg=2)
+
+        print(self.predictX)
+        print(self.predictY)
+        
+        self.polynX = np.poly1d(self.predictX)
+        self.polynY = np.poly1d(self.predictY)
+        x_ = np.linspace(1, 8, 8)
+        plt.plot(x_, self.polynX(x_))
+        plt.plot(x_, self.polynY(x_))
+        print(self.polynX(x_))
+        plt.show()
+        
+    def kalmanFilter(self):
+        kf = KalmanFilter(dim_x=2, dim_z=2)
+        ball_positions = [(self.predictPoly[:,1], self.predictPoly[:,2] )]
+        KalmanFilter()"""
+
+        
+
+        
+        

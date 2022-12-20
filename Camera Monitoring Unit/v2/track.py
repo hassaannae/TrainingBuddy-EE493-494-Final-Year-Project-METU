@@ -18,11 +18,13 @@ class Track():
         self.direction = direction
         self.hitPoint = hitPoint
         self.ballState = ballState
+
     def getPos(self):
         return self.pos
 
     def getRadius(self):
         return self.radius
+
 
 class Tracks():
     Y_DIRECTION_THRESHOLD = 10  # in pixel
@@ -161,3 +163,4 @@ class Tracks():
         # Down
         else:
             self.history[-1].direction = d
+
