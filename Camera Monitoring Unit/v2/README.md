@@ -9,18 +9,21 @@
     * Fix the default values - DONE
     * Show the frame rate and resolution
     * Show the radius and position of the ball pixel-wise  - DONE
+    * Show the miss or hit - DONE
 
 <br />
 
 * Create an hit detection algorithm
     * Kalman filter is utilized for predicting the path of the ball - DONE <br />
         * <s> Depends on spin, speed, launching angle.. - LEFT </s>
-    * If the ball gets out from some error margin, count as hit
+    * If the ball gets out from some error margin, count as hit - DONE 
+        * Not working properly
     * If it does stay in the prediction and ball goes below the table, count as miss
+        * Prediction of the future positions of the ball is not working correctly.
 <br /> <br />
 
 * <s> Collect more test videos with orange ball - CANCEL </s>
-    * If possible, gather videos with different resolution and frame rates 
+    * If possible, gather videos with different resolution and frame rates - DONE
 
 <br /> 
 
