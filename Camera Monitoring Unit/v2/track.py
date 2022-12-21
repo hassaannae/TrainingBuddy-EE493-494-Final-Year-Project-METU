@@ -6,12 +6,13 @@ DOWN_VECTOR = np.array([0, 1])
 SPEED_DIRECTION_THRESHOLD = 25
 
 class BallState(Enum):
-    Unknown = 1
-    Up = 2
-    Down = 3
+    Launch = 1
+    Bounce = 2
+    Hit = 3
+    Miss = 4
 
 class Track():
-    def __init__(self, pos, radius, speed=np.zeros(2), direction=DOWN_VECTOR, hitPoint=np.zeros(2), ballState=BallState.Unknown):
+    def __init__(self, pos, radius, speed=np.zeros(2), direction=DOWN_VECTOR, hitPoint=np.zeros(2), ballState=BallState.Launch):
         self.pos = np.array(pos)
         self.radius = radius
         self.speed = speed
@@ -42,7 +43,6 @@ class Tracks():
         # CALCULATION
         self.calculateCurrentSpeed()
         self.calculateBallDirection(self.gameParameter.numPredictFrame)
-        self.calculateBallState()
 
     def getTrackAt(self, index):
         if len(self.history) == 0:
@@ -102,30 +102,6 @@ class Tracks():
 
         return np.zeros(2)
 
-    def calculateBallState(self):
-        if len(self.history) < 2:
-            return 
-        
-        lastHistory = self.history[-1]
-        isInGame = self.isBallInGame(lastHistory.pos)
-        if not isInGame:
-            return
-
-        # ball is in-game, find the direction
-        ballAtPlayerFrame = -1
-        for i in range(len(self.history)-2, 0, -1):
-            t = self.history[i]
-            if t.ballState is BallState.Unknown:
-                ballAtPlayerFrame = i
-                break
-
-        # cannot find when ball was at player
-        if ballAtPlayerFrame == -1:
-            return
-        
-        p0 = self.history[ballAtPlayerFrame].pos
-        p = lastHistory.pos
-        lastHistory.ballState = BallState.Down if p[1] > p0[1] else BallState.Up
 
     def calculateCurrentSpeed(self):
         if len(self.history) < 2:
