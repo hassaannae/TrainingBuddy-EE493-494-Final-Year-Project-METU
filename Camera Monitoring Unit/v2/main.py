@@ -25,8 +25,8 @@ class App(QWidget):
         self.setFixedSize(1440, 810)
 
         self.image_label = QLabel(self)
-        self.imageProcessor = BallTracker("50fps")
-        self.videoThread = VideoThread(self.imageProcessor, file = "Video/fps-test/50fps.mp4")
+        self.imageProcessor = BallTracker("480res")
+        self.videoThread = VideoThread(self.imageProcessor, file = "Video/res-test/480p-25fps.mp4")
         self.videoThread.change_pixmap_signal.connect(self.update_image)
         self.videoThread.start()
 

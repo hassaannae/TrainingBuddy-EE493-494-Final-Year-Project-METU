@@ -150,37 +150,50 @@ class BallTracker(ImageProcessor):
             fps50 = [18, 67, 112, 157]
             forward = 10
             offsets = [15, 16, forward+13, forward+7]
-            circle = 4
+            circle = 20
+            thickness = 4
         elif self.data == "dark" or self.data == "lit":
             fps50 = [18, 67, 112, 157]
             forward = 10
             offsets = [15, 16, forward+13, forward+7]
-            circle = 4
+            circle = 20
+            thickness = 4
         elif self.data == "25fps":
             fps50 = [9, 33, 56, 79]
             forward = 5
             offsets = [8, 9, forward+9, forward+5]
-            circle = 4
+            circle = 20
+            thickness = 4
         elif self.data == "10fps":
             fps50 = [3, 13, 22, 32]
             forward = 5
             offsets = [3, 4, forward+1, forward]
-            circle = 4
+            circle = 20
+            thickness = 4
         elif self.data == "720res":
             fps50 = [2, 27, 49, 71]
             forward = 5
             offsets = [10, 11, forward+10, forward+6]
-            circle = 4
+            circle = 20
+            thickness = 3
         elif self.data == "480res":
             fps50 = [2, 27, 49, 71]
             forward = 5
             offsets = [10, 11, forward+10, forward+6]
-            circle = 3
+            circle = 15
+            thickness = 2
         elif self.data == "360res":
             fps50 = [2, 27, 49, 71]
             forward = 5
             offsets = [10, 11, forward+10, forward+6]
-            circle = 2
+            circle = 10
+            thickness = 1.5
+        elif self.data == "240res":
+            fps50 = [2, 27, 49, 71]
+            forward = 5
+            offsets = [10, 11, forward+10, forward+6]
+            circle = 5
+            thickness = 1
 
 
         if self.tracks.getTrackAt(-1) != None and self.frameCount >=fps50[0] and self.frameCount <=(fps50[0]+offsets[0]):
@@ -189,10 +202,10 @@ class BallTracker(ImageProcessor):
             print("X: {}, Y: {}".format(self.posX, self.posY))
 
             self.predicted = self.kf.predict(self.posX, self.posY)
-            cv2.circle(frame, (self.predicted[0], self.predicted[1]), 20, (255,0,0), circle)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
             print(self.predicted)
         elif self.frameCount == (fps50[0]+offsets[1]):
-            self.predictAfter(frame, forward, circle)
+            self.predictAfter(frame, forward, circle, thickness)
         elif self.frameCount > (fps50[0]+offsets[1]) and self.frameCount < (fps50[0]+offsets[2]):
             errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[0]+offsets[3])][0])/self.posX*100
             errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[0]+offsets[3])][1])/self.posY*100
@@ -208,10 +221,10 @@ class BallTracker(ImageProcessor):
             print("X: {}, Y: {}".format(self.posX, self.posY))
 
             self.predicted = self.kf.predict(self.posX, self.posY)
-            cv2.circle(frame, (self.predicted[0], self.predicted[1]), 20, (255,0,0), circle)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
             print(self.predicted)
         elif self.frameCount == (fps50[1]+offsets[1]):
-            self.predictAfter(frame, forward, circle)
+            self.predictAfter(frame, forward, circle, thickness)
         elif self.frameCount > (fps50[1]+offsets[1]) and self.frameCount < (fps50[1]+offsets[2]):
             errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[1]+offsets[3])][0])/self.posX*100
             errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[1]+offsets[3])][1])/self.posY*100
@@ -227,10 +240,10 @@ class BallTracker(ImageProcessor):
             print("X: {}, Y: {}".format(self.posX, self.posY))
 
             self.predicted = self.kf.predict(self.posX, self.posY)
-            cv2.circle(frame, (self.predicted[0], self.predicted[1]), 20, (255,0,0), circle)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
             print(self.predicted)
         elif self.frameCount == (fps50[2]+offsets[1]):
-            self.predictAfter(frame, forward, circle)
+            self.predictAfter(frame, forward, circle, thickness)
         elif self.frameCount > (fps50[2]+offsets[1]) and self.frameCount < (fps50[2]+offsets[2]):
             errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[2]+offsets[3])][0])/self.posX*100
             errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[2]+offsets[3])][1])/self.posY*100
@@ -246,10 +259,10 @@ class BallTracker(ImageProcessor):
             print("X: {}, Y: {}".format(self.posX, self.posY))
 
             self.predicted = self.kf.predict(self.posX, self.posY)
-            cv2.circle(frame, (self.predicted[0], self.predicted[1]), 20, (255,0,0), circle)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
             print(self.predicted)
         elif self.frameCount == (fps50[3]+offsets[1]):
-            self.predictAfter(frame, forward, circle)
+            self.predictAfter(frame, forward, circle, thickness)
         elif self.frameCount > (fps50[3]+offsets[1]) and self.frameCount < (fps50[3]+offsets[2]):
             errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[3]+offsets[3])][0])/self.posX*100
             errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[3]+offsets[3])][1])/self.posY*100
@@ -259,11 +272,11 @@ class BallTracker(ImageProcessor):
             else:
                 self.ballState = "MISS"
     
-    def predictAfter(self, frame, forward, circle):
+    def predictAfter(self, frame, forward, circle, thickness):
         for i in range(forward):
             self.predicted = self.kf.predict(self.predicted[0], self.predicted[1])
             self.predStore.append(self.predicted)
-            cv2.circle(frame, (self.predicted[0], self.predicted[1]), 20, (0,255,0), circle)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (0,255,0), thickness)
         print(self.predStore)
 
 
