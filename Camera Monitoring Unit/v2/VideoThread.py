@@ -25,7 +25,7 @@ class VideoThread(QThread):
 
     count = 0
     
-    def __init__(self, imageProcessor, frameRate, file = None):
+    def __init__(self, imageProcessor, file = None):
         super().__init__()
 
         # FLAGS
@@ -39,7 +39,6 @@ class VideoThread(QThread):
             self.vs = cv2.VideoCapture(1)
         else:    
             self.vs = cv2.VideoCapture(file)
-            self.vs.set(cv2.CAP_PROP_FPS, frameRate)
         time.sleep(2.0)
         self.imageProcessor = imageProcessor
         self.roi = Roi(0,0,0,0)
@@ -72,7 +71,7 @@ class VideoThread(QThread):
 
             while not self.playing:
                 time.sleep(0.5)
-                #time.sleep(0.01667)
+                time.sleep(0.01667)
             
             # latestTrack = self.history[-1]
             # writeServo(latestTrack["center"][0])

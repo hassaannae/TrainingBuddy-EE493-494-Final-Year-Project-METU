@@ -46,19 +46,28 @@ class GameParameter():
         return yOpponent, yRobot
 
 class BallTracker(ImageProcessor):
-    def __init__(self, frameRate):
+    def __init__(self, data):
         self.roi = [0,0,1,1]
-        self.colorThreshold = ColorThreshold()
+        self.data = data
+
+        if self.data == "dark":
+            self.colorThreshold = ColorThreshold(0, 179, 0, 71, 49, 255)
+        else:
+            self.colorThreshold = ColorThreshold(0, 179, 0, 52, 163, 255)
+        
         self.gameParameter = GameParameter()
         self.tracks = Tracks(self.gameParameter)
         self.transformationMatrix = None
         self.width = 10
         self.height = 10
+        
         self.frameCount = 0
-        self.frameRate = frameRate
+        self.predArr = []
         self.kf = KalmanFilter()
-        """self.testArr = np.random.randint(64, size=(4,3))"""
-        self.predictPoly = np.ones((4, 3), dtype=float)
+        self.predicted = self.kf.predict(0,0)
+        self.predStore = []
+        self.ballState = " "
+
         
     def calculate(self, frame):
         
@@ -86,7 +95,7 @@ class BallTracker(ImageProcessor):
         cnts = imutils.grab_contours(cnts)
         center = None
 
-        self.drawPlayerZone(frame)    
+         
 
         if len(cnts) > 0:
             c = max(cnts, key=cv2.contourArea)
@@ -98,11 +107,13 @@ class BallTracker(ImageProcessor):
             cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
             thisTrack = Track( [x,y], radius, 0, 0 )
+
             self.posX = x
             self.posY = y
             self.tracks.append(thisTrack)
-            self.drawSpeedVector(frame)
-            self.drawHitLine(frame)
+        else: 
+            self.posX = 1
+            self.posY = 1
 
         self.predict(frame)
         mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
@@ -114,25 +125,6 @@ class BallTracker(ImageProcessor):
         pts1 = np.float32([[0,0],[self.width, 0],[-v1,self.height],[self.width+v1,self.height]])    # current 
         pts2 = np.float32([[0,0],[self.width, 0],[0,self.height],[self.width,self.height]])    # target
         self.transformationMatrix = cv2.getPerspectiveTransform(pts1,pts2)
-
-    def drawHitLine(self, frame):
-        lastTrack = self.tracks.getLastTrack()
-        p = lastTrack.pos
-        hitPoint = lastTrack.hitPoint
-        cv2.line(frame, tuple(p.astype(int)), tuple(hitPoint.astype(int)), (255, 153, 51), 5)
-
-    def drawSpeedVector(self, frame):
-        lastTrack = self.tracks.getLastTrack()
-        pos = lastTrack.pos
-        speed = lastTrack.speed
-        endPoint = np.add(pos, speed)
-        cv2.line(frame, tuple(pos.astype(int)), tuple(endPoint.astype(int)), (255, 0, 0), 5)
-
-    def drawPlayerZone(self, frame):
-        h, w, c  = frame.shape
-        yOpponent, yRobot = self.gameParameter.getPlayerZone(h)
-        cv2.line(frame, (0, int(yOpponent)), (w, int(yOpponent)), (255, 0, 0), 3)
-        cv2.line(frame, (0, int(yRobot)), (w, int(yRobot)), (255, 0, 0), 3)
 
     def setRoi(self, top, left, bottom, right):
         self.roi = [top, left, bottom, right]
@@ -152,42 +144,143 @@ class BallTracker(ImageProcessor):
             self.colorThreshold.v_max = v_max
 
     def predict(self, frame):
-        if self.tracks.getTrackAt(-1) != None and self.frameCount >=68 and self.frameCount <=80:
+        
+
+        if self.data == "50fps":
+            fps50 = [18, 67, 112, 157]
+            forward = 10
+            offsets = [15, 16, forward+13, forward+7]
+            circle = 20
+            thickness = 4
+        elif self.data == "dark" or self.data == "lit":
+            fps50 = [18, 67, 112, 157]
+            forward = 10
+            offsets = [15, 16, forward+13, forward+7]
+            circle = 20
+            thickness = 4
+        elif self.data == "25fps":
+            fps50 = [9, 33, 56, 79]
+            forward = 5
+            offsets = [8, 9, forward+9, forward+5]
+            circle = 20
+            thickness = 4
+        elif self.data == "10fps":
+            fps50 = [3, 13, 22, 32]
+            forward = 5
+            offsets = [3, 4, forward+1, forward]
+            circle = 20
+            thickness = 4
+        elif self.data == "720res":
+            fps50 = [2, 27, 49, 71]
+            forward = 5
+            offsets = [10, 11, forward+10, forward+6]
+            circle = 20
+            thickness = 3
+        elif self.data == "480res":
+            fps50 = [2, 27, 49, 71]
+            forward = 5
+            offsets = [10, 11, forward+10, forward+6]
+            circle = 15
+            thickness = 2
+        elif self.data == "360res":
+            fps50 = [2, 27, 49, 71]
+            forward = 5
+            offsets = [10, 11, forward+10, forward+6]
+            circle = 10
+            thickness = 1.5
+        elif self.data == "240res":
+            fps50 = [2, 27, 49, 71]
+            forward = 5
+            offsets = [10, 11, forward+10, forward+6]
+            circle = 5
+            thickness = 1
+
+
+        if self.tracks.getTrackAt(-1) != None and self.frameCount >=fps50[0] and self.frameCount <=(fps50[0]+offsets[0]):
             #self.recordFrames(self.frameCount-71)
             print(self.frameCount)
             print("X: {}, Y: {}".format(self.posX, self.posY))
-            """print(str(self.testArr[1][2]) + " " + str(self.testArr[3][2]) + " " + str(self.testArr[0][1]))
-            print(self.testArr)"""
-            predicted = self.kf.predict(self.posX, self.posY)
-            cv2.circle(frame, (predicted[0], predicted[1]), 20, (255,0,0), 4)
-            print(predicted)
-  
-        
-        
-    """def recordFrames(self, ind):
-        self.predictPoly[ind-1][2] = self.posY
-        self.predictPoly[ind-1][1] = self.posX
-        self.predictPoly[ind-1][0] = ind
-        #print(self.predictPoly[:, 1])
-    def polyCoeff(self):
-        self.predictX = np.polyfit(self.predictPoly[:, 0], self.predictPoly[:, 1], deg=1)
-        self.predictY = np.polyfit(self.predictPoly[:, 0], self.predictPoly[:, 2], deg=2)
 
-        print(self.predictX)
-        print(self.predictY)
+            self.predicted = self.kf.predict(self.posX, self.posY)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
+            print(self.predicted)
+        elif self.frameCount == (fps50[0]+offsets[1]):
+            self.predictAfter(frame, forward, circle, thickness)
+        elif self.frameCount > (fps50[0]+offsets[1]) and self.frameCount < (fps50[0]+offsets[2]):
+            errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[0]+offsets[3])][0])/self.posX*100
+            errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[0]+offsets[3])][1])/self.posY*100
+            print("{}, {}".format(errorRateX, errorRateY))
+            if abs(errorRateX) > 15 or abs(errorRateY) > 15:
+                self.ballState = "HIT"
+            else:
+                self.ballState = "MISS"
         
-        self.polynX = np.poly1d(self.predictX)
-        self.polynY = np.poly1d(self.predictY)
-        x_ = np.linspace(1, 8, 8)
-        plt.plot(x_, self.polynX(x_))
-        plt.plot(x_, self.polynY(x_))
-        print(self.polynX(x_))
-        plt.show()
+        if self.tracks.getTrackAt(-1) != None and self.frameCount >=fps50[1] and self.frameCount <=(fps50[1]+offsets[0]):
+            #self.recordFrames(self.frameCount-71)
+            print(self.frameCount)
+            print("X: {}, Y: {}".format(self.posX, self.posY))
+
+            self.predicted = self.kf.predict(self.posX, self.posY)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
+            print(self.predicted)
+        elif self.frameCount == (fps50[1]+offsets[1]):
+            self.predictAfter(frame, forward, circle, thickness)
+        elif self.frameCount > (fps50[1]+offsets[1]) and self.frameCount < (fps50[1]+offsets[2]):
+            errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[1]+offsets[3])][0])/self.posX*100
+            errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[1]+offsets[3])][1])/self.posY*100
+            print("{}, {}".format(errorRateX, errorRateY))
+            if abs(errorRateX) > 15 or abs(errorRateY) > 15:
+                self.ballState = "HIT"
+            else:
+                self.ballState = "MISS"
         
-    def kalmanFilter(self):
-        kf = KalmanFilter(dim_x=2, dim_z=2)
-        ball_positions = [(self.predictPoly[:,1], self.predictPoly[:,2] )]
-        KalmanFilter()"""
+        if self.tracks.getTrackAt(-1) != None and self.frameCount >=fps50[2] and self.frameCount <=(fps50[2]+offsets[0]):
+            #self.recordFrames(self.frameCount-71)
+            print(self.frameCount)
+            print("X: {}, Y: {}".format(self.posX, self.posY))
+
+            self.predicted = self.kf.predict(self.posX, self.posY)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
+            print(self.predicted)
+        elif self.frameCount == (fps50[2]+offsets[1]):
+            self.predictAfter(frame, forward, circle, thickness)
+        elif self.frameCount > (fps50[2]+offsets[1]) and self.frameCount < (fps50[2]+offsets[2]):
+            errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[2]+offsets[3])][0])/self.posX*100
+            errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[2]+offsets[3])][1])/self.posY*100
+            print("{}, {}".format(errorRateX, errorRateY))
+            if abs(errorRateX) > 15 or abs(errorRateY) > 15:
+                self.ballState = "HIT"
+            else:
+                self.ballState = "MISS"
+        
+        if self.tracks.getTrackAt(-1) != None and self.frameCount >=fps50[3] and self.frameCount <=(fps50[3]+offsets[0]):
+            #self.recordFrames(self.frameCount-71)
+            print(self.frameCount)
+            print("X: {}, Y: {}".format(self.posX, self.posY))
+
+            self.predicted = self.kf.predict(self.posX, self.posY)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (255,0,0), thickness)
+            print(self.predicted)
+        elif self.frameCount == (fps50[3]+offsets[1]):
+            self.predictAfter(frame, forward, circle, thickness)
+        elif self.frameCount > (fps50[3]+offsets[1]) and self.frameCount < (fps50[3]+offsets[2]):
+            errorRateX = (self.posX - self.predStore[self.frameCount - (fps50[3]+offsets[3])][0])/self.posX*100
+            errorRateY = (self.posY - self.predStore[self.frameCount - (fps50[3]+offsets[3])][1])/self.posY*100
+            print("{}, {}".format(errorRateX, errorRateY))
+            if abs(errorRateX) > 15 or abs(errorRateY) > 15:
+                self.ballState = "HIT"
+            else:
+                self.ballState = "MISS"
+    
+    def predictAfter(self, frame, forward, circle, thickness):
+        for i in range(forward):
+            self.predicted = self.kf.predict(self.predicted[0], self.predicted[1])
+            self.predStore.append(self.predicted)
+            cv2.circle(frame, (self.predicted[0], self.predicted[1]), circle, (0,255,0), thickness)
+        print(self.predStore)
+
+
+  
 
         
 
