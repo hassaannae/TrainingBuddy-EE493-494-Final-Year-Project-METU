@@ -1,31 +1,38 @@
-## NOTES
+Run on Pyhton3.9 + OpenCV
 
-* <s>Algorithm is not working properly with white ball since there are white strips on the edges of the table and on the net.</s>
-* Now filtering is working with white ball also so any video with proper perspective can be used.
+Click the corresponding image to link to demo video
 
-## TODOs
+6/7/2021
+- Integrate offline motion planner with the ball tracking UI. 
 
-* Tidy up the GUI 
-    * Fix the default values - DONE
-    * Show the frame rate and resolution
-    * Show the radius and position of the ball pixel-wise  - DONE
-    * Show the miss or hit - DONE
+[![BallTracking + IK](https://github.com/tanat44/PingpongBallTracker/blob/master/doc/fkPlotCv.jpg)](https://youtu.be/clzRVqpBrZ4)
 
-<br />
+5/7/2021
+- Create offline motion planner by pre-computing a look-up table for world-coordinate and join-coordinate. 
+- Modify ```Experiment/inverse kinematic.py``` into ```MotionPlanner.py```. 
 
-* Create an hit detection algorithm
-    * Kalman filter is utilized for predicting the path of the ball - DONE <br />
-        * <s> Depends on spin, speed, launching angle.. - LEFT </s>
-    * If the ball gets out from some error margin, count as hit - DONE 
-        * Not working properly
-    * If it does stay in the prediction and ball goes below the table, count as miss
-        * Prediction of the future positions of the ball is not working correctly.
-<br /> <br />
+[![Offline Motion Planner](https://github.com/tanat44/PingpongBallTracker/blob/master/doc/motionPlanner210705.PNG)]()
 
-* <s> Collect more test videos with orange ball - CANCEL </s>
-    * If possible, gather videos with different resolution and frame rates - DONE
+2/7/2021
+- Add Perspective correction.
+- Organize controls in tab UI.
+- Predict hitting point (light blue line)
+- Predict future hitting frames
 
-<br /> 
+[![Perspective Correction](https://github.com/tanat44/PingpongBallTracker/blob/master/doc/perspectiveCorrection210702.PNG)]()
 
+1/7/2021
+Add PyQt UI for easier parameter tuning
 
-    
+[![Pingpong UI](https://github.com/tanat44/PingpongBallTracker/blob/master/doc/balldetectoroi210701.PNG)](https://youtu.be/TumrMjXR5lo)
+
+17/6/2021
+Ball Tracking
+
+[![Tracking Demo](https://github.com/tanat44/PingpongBallTracker/blob/master/doc/tracking210617.PNG)](https://youtu.be/EJ_SHeF628E)
+
+The original tracking idea was developed by Ahx.
+
+    https://stackoverflow.com/questions/63730808/golf-ball-tracking-in-python-opencv-with-different-color-balls 
+
+I modified the tracking to suit orange pingpong ball and to make use of previous frame information.

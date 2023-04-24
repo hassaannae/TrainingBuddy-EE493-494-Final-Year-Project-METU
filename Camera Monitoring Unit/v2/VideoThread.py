@@ -23,8 +23,6 @@ class Roi():
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
 
-    count = 0
-    
     def __init__(self, imageProcessor, file = None):
         super().__init__()
 
@@ -43,11 +41,9 @@ class VideoThread(QThread):
         self.imageProcessor = imageProcessor
         self.roi = Roi(0,0,0,0)
         self.currentFrame = None
-
+        
     def run(self):        
         reloadingVideo = False
-        prev = 0
-    
         while self.running:
             ret, frame  = self.vs.read()
 
@@ -71,8 +67,7 @@ class VideoThread(QThread):
 
             while not self.playing:
                 time.sleep(0.5)
-                time.sleep(0.01667)
-            
+            time.sleep(0.03)
             # latestTrack = self.history[-1]
             # writeServo(latestTrack["center"][0])
 
@@ -92,7 +87,7 @@ class VideoThread(QThread):
     def nextFrame(self):
         self.playOneFrame = True
         self.playing = True
-
+    
     def previousFrame(self):
         pass
 
@@ -102,6 +97,7 @@ class VideoThread(QThread):
             return None
 
         height, width, channels = frame.shape
+        
 
         t, l, b, r = self.roi.getAbsoluteValue(width, height)
         cropFrame = frame[t:b, l:r]
@@ -137,6 +133,7 @@ class VideoThread(QThread):
         hPad = targetWidth - w
         return cv2.copyMakeBorder(image, 0, vPad, 0, hPad, borderType=cv2.BORDER_CONSTANT, value=[0,0,0])
 
+
     def drawRoi(self, image, width, height):
         t, l, b, r = self.roi.getAbsoluteValue(width, height)
         pts = np.array([[l, t],\
@@ -152,12 +149,14 @@ class VideoThread(QThread):
 
     def setRoi(self, top=None, left=None, bottom=None, right=None):
         if top is not None:
-            self.roi.top = 5
+            self.roi.top = top
         if left is not None:
-            self.roi.left = 16
+            self.roi.left = left
         if bottom is not None:
-            self.roi.bottom = 10
+            self.roi.bottom = bottom
         if right is not None:
-            self.roi.right = 14
+            self.roi.right = right
 
         self.reprocessFrame()
+
+

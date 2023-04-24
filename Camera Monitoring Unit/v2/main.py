@@ -1,15 +1,16 @@
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget, QApplication, QLabel, QVBoxLayout, QGridLayout, QTabWidget, QComboBox
+from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget, QApplication, QLabel, QVBoxLayout, QGridLayout, QTabWidget
 from PyQt5.QtGui import QPixmap
 import sys
 import cv2
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
 
+
 # MY LIB
 from VideoThread import VideoThread
 from ImageProcessor import BallTracker, ImageProcessor
-from track import BallState
+from Track import BallState
 
 # MY WIDGET
 from Widget.FrameControl import FrameControl
@@ -17,72 +18,70 @@ from Widget.RoiControl import RoiControl
 from Widget.BallControl import BallControl
 from Widget.GameControl import GameControl
 
+class LaunchParameters():
+    def __init__(self, launchSpeed, spin, launchDirection):
+        self.launchSpeed = launchSpeed
+        self.spin = spin
+        self.launchDirection = launchDirection
+    def getParams(self):
+        return '{self.launchSpeed}, {self.spin}, {self.launchDirection}'.format(self=self)
 
 class App(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Pingpong ball detection")
-        self.setFixedSize(1440, 810)
+        self.setWindowTitle("Pingpong Robot Manager")
+        self.setFixedSize(1200,900)
 
+        # OBJECT
+
+        # VIDEO DISPLAY
         self.image_label = QLabel(self)
-        self.imageProcessor = BallTracker("480res")
-        self.videoThread = VideoThread(self.imageProcessor, file = "Video/res-test/480p-25fps.mp4")
+        self.imageProcessor = BallTracker()
+        self.videoThread = VideoThread(self.imageProcessor, file = "Video/1.mp4")
         self.videoThread.change_pixmap_signal.connect(self.update_image)
         self.videoThread.start()
 
+        # FRAME CONTROL
         self.frameControl = FrameControl(self.videoThread)
 
         # SETTING TAB
         self.roiControl = RoiControl(self.videoThread)
         self.ballControl = BallControl(self.videoThread)
-        self.gameControl = GameControl(self.videoThread)
+        
+        
 
         self.settingTab = QTabWidget()
-        self.settingTab.addTab(self.gameControl, "Game")
         self.settingTab.addTab(self.roiControl, "Roi")
         self.settingTab.addTab(self.ballControl, "Ball")
+
 
         # RESULT
         resultLayout = QVBoxLayout()
 
-        self.radAndPosTab = QLabel("Radius - Position")
-        self.radAndPosTab.setAlignment(Qt.AlignLeft)
-        self.radAndPosTab.setStyleSheet("font-weight: bold; font-size: 22px")
-        resultLayout.addWidget(self.radAndPosTab)
-        self.radiusAndPos = QLabel("-")
-        self.radiusAndPos.setAlignment(Qt.AlignCenter)
-        self.radiusAndPos.setStyleSheet("font-weight: bold; font-size: 18px")
-        self.radiusAndPos.setFixedHeight(80)
-        resultLayout.addWidget(self.radiusAndPos)
+        testQueue = []
+        testQueue.append(LaunchParameters("fast", "top-spin", "mid").getParams())
+        testQueue.append(LaunchParameters("slow", "back-spin", "mid").getParams())
+        testQueue.append(LaunchParameters("fast", "top-spin", "mid").getParams())
+        testQueue.append(LaunchParameters("slow", "back-spin", "mid").getParams())
 
-        """self.predTab = QLabel("Predicted Radius - Position")
-        self.predTab.setAlignment(Qt.AlignLeft)
-        self.predTab.setStyleSheet("font-weight: bold; font-size: 22px")
-        resultLayout.addWidget(self.predTab)
-        self.pred = QLabel("-")
-        self.pred.setAlignment(Qt.AlignCenter)
-        self.pred.setStyleSheet("font-weight: bold; font-size: 18px")
-        self.pred.setFixedHeight(80)
-        resultLayout.addWidget(self.pred)"""
+        resultLayout.addWidget(QLabel("Launch Queue:"))
+        self.queue = QLabel(str(testQueue))
+        self.queue.setStyleSheet("font-size: 10px")
+        resultLayout.addWidget(self.queue)
+        
+        resultLayout.addWidget(QLabel("Ball speed in pixel size:"))
+        self.speed = QLabel("_")
+        self.speed.setAlignment(Qt.AlignCenter)
+        self.speed.setStyleSheet("font-weight: bold; font-size: 14px;")
+        self.speed.setFixedHeight(80)
+        resultLayout.addWidget(self.speed)
 
-        self.ballSpeedTab = QLabel("Ball Speed")
-        self.ballSpeedTab.setAlignment(Qt.AlignLeft)
-        self.ballSpeedTab.setStyleSheet("font-weight: bold; font-size: 22px")
-        resultLayout.addWidget(self.ballSpeedTab)
-        self.ballSpeed = QLabel("-")
-        self.ballSpeed.setAlignment(Qt.AlignCenter)
-        self.ballSpeed.setStyleSheet("font-weight: bold; font-size: 18px")
-        self.ballSpeed.setFixedHeight(80)
-        resultLayout.addWidget(self.ballSpeed)
-
-        self.stateTab = QLabel("Ball State")
-        self.stateTab.setAlignment(Qt.AlignCenter)
-        self.stateTab.setStyleSheet("font-weight: bold; font-size: 22px")
-        resultLayout.addWidget(self.stateTab)
-        self.state = QLabel("-")
-        self.state.setAlignment(Qt.AlignCenter)
-        self.state.setFixedHeight(120)
-        resultLayout.addWidget(self.state)
+        resultLayout.addWidget(QLabel("Ball direction:"))
+        self.direction = QLabel("_")
+        self.direction.setAlignment(Qt.AlignCenter)
+        self.direction.setStyleSheet("font-weight: bold; font-size: 12px;")
+        self.direction.setFixedHeight(60)
+        resultLayout.addWidget(self.direction)
 
         # CONTROL PANEL
         controlPanelLayout = QVBoxLayout()
@@ -93,7 +92,7 @@ class App(QWidget):
 
         self.controlPanel = QWidget()
         self.controlPanel.setLayout(controlPanelLayout)
-        self.controlPanel.setFixedWidth(500)
+        self.controlPanel.setFixedWidth(300)
 
         # MAIN LAYOUT
         mainLayout = QHBoxLayout()
@@ -102,44 +101,33 @@ class App(QWidget):
 
         self.setLayout(mainLayout)
 
+
     def closeEvent(self, event):
         self.videoThread.stop()
         event.accept()
 
     # FUNCTION
 
-    def updateRadiusAndPos(self):
-        if self.imageProcessor.tracks.getLastTrack() == None:
-            return None
-        q = self.imageProcessor.tracks.getLastTrack().getPos()
-        s = self.imageProcessor.tracks.getLastTrack().getRadius()
-        self.radiusAndPos.setText("Radius: {:.2f} - Pos: {:.2f}, {:.2f}".format(s, q[0], q[1]))
-
-    def updatePred(self):
-        if len(self.imageProcessor.predArr) == 0:
-            return None
-        q = self.imageProcessor.predArr
-        print(q)
-        self.pred.setText("Pos: {:.2f}, {:.2f}".format(q[0][0], q[0][1]))
-
     def updateSpeed(self):
-        if self.imageProcessor.tracks.getLastTrack() == None:
-            return None
-        self.ballSpeed.setText("Speed: {:.2f}, {:.2f}".format(self.imageProcessor.tracks.calculateCurrentSpeed()[0], self.imageProcessor.tracks.calculateCurrentSpeed()[1]))
+        if len(self.imageProcessor.tracks.history) > 0:
+            sp = self.imageProcessor.tracks.getLastTrack().speed
+            self.speed.setText(str(sp))
 
-    def updateState(self):
-        s = self.imageProcessor.ballState
-        if s == "HIT":
-            color = "green"
-        elif s == "MISS":
-            color = "red"
-        else:
-            color = "transparent"
-        
-        self.state.setText(s)
-        self.state.setStyleSheet(f'background-color: {color}')
+    def updateDirection(self):
+        if len(self.imageProcessor.tracks.history) > 1:
+            print(self.imageProcessor.tracks.getLastTrack().speed[0])
+            if self.imageProcessor.tracks.getLastTrack().speed[0] > 0:
+                print("a")
+                self.direction.setText("Towards launcher")
+                self.direction.setStyleSheet("background-color: green; font-weight: bold; font-size: 12px;")
+            elif self.imageProcessor.tracks.getLastTrack().speed[0] <= 0:
+                self.direction.setText("Towards player") 
+                self.direction.setStyleSheet("background-color: red; font-weight: bold; font-size: 12px;")
+            else:
+                self.direction.setText("Unknown")
 
 
+    
     def convert_cv_qt(self, cv_img):
         """Convert from an opencv image to QPixmap"""
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
@@ -157,11 +145,9 @@ class App(QWidget):
         qt_img = self.convert_cv_qt(cv_img)
         self.image_label.setPixmap(qt_img)
 
-        self.updateRadiusAndPos()
         self.updateSpeed()
-        """self.updatePred()"""
-        self.updateState()
-
+        self.updateDirection()
+    
 if __name__=="__main__":
     app = QApplication(sys.argv)
     a = App()
